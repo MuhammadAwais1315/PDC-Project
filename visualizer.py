@@ -20,7 +20,7 @@ def run_serial_program(input_file, update_file, source_vertex, output_file):
 
     start_time = time.time()
     
-    command = ['./serial_sssp', input_file, update_file, str(source_vertex), output_file]
+    command = ['Sequencial/serial_sssp', input_file, update_file, str(source_vertex), output_file]
     print(f"Executing serial command: {' '.join(command)}")
     
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -55,7 +55,14 @@ def run_parallel_program(input_file, update_file, source_vertex, num_processes, 
 
     start_time = time.time()
     
-    command = ['mpirun', '--use-hwthread-cpus', '--bind-to', 'core:overload-allowed', '-np', str(num_processes), './sssp', input_file, update_file, str(source_vertex), output_file]
+    command = [
+    'mpirun',
+    '--allow-run-as-root',
+    '--hostfile', 'Parralel/hosts',
+    '--bind-to', 'core',
+    '-np', str(num_processes),
+    'Parralel/sssp', input_file, update_file, '10000', 'output.txt'
+    ]
     if use_openmp:
         command.append('--openmp')
     if use_opencl:

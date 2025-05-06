@@ -1,167 +1,191 @@
-⚡ Parallel SSSP Update Framework for Dynamic Networks
+# ⚡ Parallel SSSP Update Framework for Dynamic Networks
 
-A scalable, platform-independent parallel implementation of the Single-Source Shortest Path (SSSP) update algorithm for large-scale dynamic networks, leveraging MPI, OpenMP, OpenCL, and METIS.
-Developed for the Parallel and Distributed Computing (PDC) course at FAST-NUCES, Islamabad.
+A scalable, platform-independent implementation of the **Single-Source Shortest Path (SSSP) update algorithm** for large-scale dynamic graphs. This project leverages **MPI, OpenMP, OpenCL, and METIS** to accelerate SSSP updates in evolving networks.
 
-📖 Project Overview
+> 📌 Developed as a final project for the **Parallel and Distributed Computing (PDC)** course at **FAST-NUCES, Islamabad**.
 
-Real-world networks — like social graphs, communication systems, and biological networks — are large and dynamic, with millions of vertices and frequent edge insertions/deletions. Traditional SSSP algorithms like Dijkstra’s are inefficient in such environments due to costly recomputation.
+---
 
-Inspired by Khanda et al. (2022), this project implements a two-phase parallel algorithm that incrementally updates the SSSP tree, avoiding full recomputation. Our implementation scales across distributed-memory clusters and heterogeneous systems using:
+## 📖 Overview
 
-🧩 METIS for graph partitioning
+Modern networks such as social graphs, road networks, and communication systems evolve constantly. Traditional algorithms like **Dijkstra’s** are inefficient for such dynamic environments due to frequent, full recomputation.
 
-🖧 MPI for inter-node parallelism
+This project implements an optimized **two-phase parallel SSSP update algorithm** based on [Khanda et al., 2022]. Our solution supports:
+- Distributed memory (via **MPI**)
+- Shared memory (via **OpenMP**)
+- GPU acceleration (via **OpenCL**)
+- Graph partitioning (via **METIS**)
 
-🧵 OpenMP for shared-memory parallelism
+---
 
-🖥️ OpenCL for GPU-accelerated edge relaxation
+## 🚀 Key Features
 
-👥 Team
-
-Abdullah Shakir
-
-Messam Raza
-
-Arban Arfan
-
-🚀 Features
-✅ Dynamic SSSP Updates
+### ✅ Dynamic SSSP Updates  
 Efficiently handles edge insertions and deletions without full recomputation.
 
-⚙️ Two-Phase Algorithm
+### ⚙️ Two-Phase Parallel Algorithm  
+1. **Identify Affected Subgraph**  
+   Parallel detection of vertices impacted by edge updates.  
+2. **Update Phase**  
+   Asynchronously relaxes affected vertices using lock-free operations.
 
-Identify Affected Subgraph: Detects affected vertices via parallel edge processing.
+### 🧵 Hybrid Parallelization Stack  
+| Layer | Technology |
+|-------|------------|
+| Partitioning | METIS |
+| Inter-node | MPI |
+| Intra-node | OpenMP |
+| GPU Acceleration | OpenCL |
 
-Update Phase: Iteratively relaxes affected vertices using lock-free, asynchronous updates.
+### 📊 Performance Visualization  
+Python scripts benchmark and visualize execution times across various process counts.
 
-🧵 Hybrid Parallelization
+---
 
-METIS: Load-balanced partitioning
+## 👨‍💻 Team Members
 
-MPI: Distributed-memory coordination
+- Muhammad Zohaib Raza  
+- Muhammad Awais
+- Hamid Ali
 
-OpenMP: CPU parallelism
+---
 
-OpenCL: GPU acceleration
+## 🧩 Project Structure
 
-📊 Performance Visualization
+```
+.
+├── sssp.cpp, graph.cpp, main.cpp, utils.cpp     # Parallel core logic
+├── serial_execution.cpp                         # Serial Dijkstra implementation
+├── opencl_utils.cpp, relax_edges.cl             # OpenCL support
+├── sample_graph.txt, sample_updates.txt         # Input data
+├── plotGraph.py, visualizer.py                  # Python scripts
+├── hosts                                        # MPI hostfile
+```
 
-Python script generates bar charts comparing execution times across MPI process counts.
+---
 
-🏗️ Scalability
+## 🔧 Compilation & Execution
 
-Supports graphs with up to 16M vertices and 250M edges.
+### 1. 📦 Prerequisites
 
-🛡️ Robustness
+| Component | Version |
+|-----------|---------|
+| OS | Ubuntu/Linux or WSL2 |
+| C++ Compiler | `g++` (C++17 compatible) |
+| MPI | OpenMPI or MPICH |
+| OpenMP | Bundled with GCC |
+| OpenCL | v2.0+ |
+| METIS | v5.1.0+ |
+| Python | 3.6+ |
 
-Handles malformed inputs, negative weights, and self-loops with detailed error handling.
+Install Python requirements:
+```bash
+pip install matplotlib
+```
 
-🛠️ Implementation Details
+---
 
-📁 Components
+### 2. ⚙️ Build Instructions
 
-1. Serial SSSP (serial_execution.cpp)
-   
-Implements Dijkstra’s algorithm for static and dynamic graphs.
-
-Applies edge updates and stores results.
-
-
+#### 🖥️ Serial SSSP
+```bash
 g++ -std=c++11 serial_execution.cpp -o serial_sssp
-./serial_sssp sample_graph.txt sample_updates.txt 10000 output.txt
+./serial_sssp sample_graph.txt sample_updates.txt 10000 output_serial.txt
+```
 
-2. Parallel SSSP (main.cpp, graph.cpp, sssp.cpp, utils.cpp, opencl_utils.cpp)
-   
-MPI + OpenMP + METIS + OpenCL integration for full hybrid parallelism.
-
-
+#### ⚡ Parallel SSSP
+```bash
 mpicxx -O3 -march=native -funroll-loops -fopenmp -DCL_TARGET_OPENCL_VERSION=200 \
 -o sssp main.cpp graph.cpp utils.cpp sssp.cpp opencl_utils.cpp -I. \
 -L/usr/local/lib -lOpenCL -lmetis
+```
 
-mpirun --use-hwthread-cpus --bind-to core:overload-allowed -np 4 \
-./sssp sample_graph.txt sample_updates.txt 10000 output.txt --openmp --opencl
+---
 
-3. OpenCL Kernel (relax_edges.cl)
-   
-Optimized GPU kernel using atomic operations for safe edge relaxations.
+### 3. 🚀 Run Instructions
 
-4. Python Visualization (plotGraph.py)
+#### ✅ Parallel Execution
+```bash
+mpirun --allow-run-as-root --hostfile hosts --bind-to core \
+-np 4 ./sssp sample_graph.txt sample_updates.txt 10000 output.txt --openmp --opencl
+```
 
-Benchmarks performance across 2–4 MPI processes.
+> 🔁 Use `--openmp` and `--opencl` flags as needed.
 
-Generates sssp_performance.png.
+#### 📊 Benchmark Visualization
+```bash
+python3 plotGraph.py
+# Output: sssp_performance.png
+```
 
-📊 Algorithm Workflow
+#### 📈 Serial vs Parallel Comparison
+```bash
+python3 visualizer.py
+```
 
-🔁 Two-Phase Update (based on Khanda et al. 2022)
+---
 
-Phase 1: Identify Affected Subgraph
+## 📚 Algorithm Workflow
 
-Processes edge insertions/deletions in parallel.
+### 🔁 Two-Phase Update Strategy
 
-Flags affected vertices (Affected, Affected_Del).
+1. **Phase 1: Affected Subgraph Identification**  
+   - Detects affected vertices from dynamic edge changes.  
+   - Handles insertions via tentative relaxations.  
+   - Handles deletions by propagating disconnects.
 
-Handles deletions by disconnecting subtrees; handles insertions by tentative relaxation.
+2. **Phase 2: Parallel Update**  
+   - Iteratively relaxes affected vertices.  
+   - Uses **OpenMP** and **OpenCL** for compute.  
+   - **MPI** synchronizes partition boundaries.
 
-Phase 2: Update Affected Subgraph
+---
 
-Lock-free, asynchronous edge relaxations until convergence.
+## 📐 Core Data Structures
 
-MPI communicates boundary updates for cross-partition consistency.
+- **Adjacency List**: Space-efficient graph representation.  
+- **SSSP Tree**: Tracks distances, parents, and update flags.  
+- **Dynamic Edge Arrays**: `Ins_k`, `Del_k` for updates.
 
-📚 Key Data Structures
+---
 
-Adjacency List: Efficient graph representation.
+## ⚙️ Performance Highlights
 
-SSSP Tree: Stores distances, parents, and update flags.
+- **Speedup**: Up to **8.5× vs Gunrock** (GPU) and **5× vs Galois** (CPU).  
+- **Scalability**: Supports graphs with ~16M vertices, 250M edges.  
+- **Load Balancing**: Achieved via **METIS + OpenMP dynamic scheduling**.  
+- **Heterogeneous Execution**: Unified CPU-GPU processing pipeline.
 
-Edge Arrays: Ins_k, Del_k for dynamic updates.
+---
 
-⚙️ Performance Highlights
+## 🧪 Sample Input Format
 
-🚀 Speedup: Up to 8.5× over Gunrock (GPU) and 5× over Galois (CPU) for moderate updates.
+### `sample_graph.txt`
+```
+# Format: u v w
+0 1 5
+1 2 3
+2 3 1
+...
+```
 
-🌐 Scalability: Tested on graphs with ~16M vertices, 250M edges.
+### `sample_updates.txt`
+```
+# Format: type u v w
+I 4 5 2    # Insertion
+D 1 2 -1   # Deletion
+```
 
-⚖️ Load Balancing: Achieved using METIS and OpenMP’s dynamic scheduling.
+---
 
-🔀 Heterogeneous Computing: Unified CPU (OpenMP) + GPU (OpenCL) processing pipeline.
+## 🛠️ Future Improvements
 
-🧰 Prerequisites
+- CUDA support for tighter GPU integration  
+- Dynamic load balancing across nodes  
+- Fault-tolerant update propagation  
 
-🖥️ OS: 
-Linux (Ubuntu recommended) or Windows with WSL2
+---
 
-🔧 Compilers
+## 📜 References
 
-g++ (GCC 9.x+) with C++17 support
-
-mpicxx (OpenMPI 4.x / MPICH 3.x)
-
-📦 Required Libraries
-
-MPI (OpenMPI or MPICH)
-
-OpenMP (bundled with GCC)
-
-OpenCL (v2.0+)
-
-METIS (v5.1.0+)
-
-🐍 Python
-
-Python 3.6+
-
-Install dependencies with:
-
-pip install matplotlib
-
-💻 Hardware
-
-Multi-core CPU (8+ cores recommended)
-
-OpenCL-compatible GPU (optional but recommended)
-
-RAM: 16 GB+ for large graphs
+- Khanda et al. (2022). *A Parallel Algorithm Template for Updating SSSP in Large-Scale Dynamic Networks*.

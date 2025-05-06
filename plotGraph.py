@@ -17,7 +17,14 @@ def run_cpp_program(input_file, update_file, num_processes=1, use_openmp=False, 
     start_time = time.time()
     
     # Command to run the MPI program with --use-hwthread-cpus and --bind-to core:overload-allowed
-    command = ['mpirun', '--use-hwthread-cpus', '--bind-to', 'core:overload-allowed', '-np', str(num_processes), './sssp', input_file, update_file, '10000', 'output.txt']
+    command = [
+    'mpirun',
+    '--allow-run-as-root',
+    '--hostfile', 'Parralel/hosts',
+    '--bind-to', 'core',
+    '-np', str(num_processes),
+    'Parralel/sssp', input_file, update_file, '10000', 'output.txt'
+    ]
     if use_openmp:
         command.append('--openmp')
     if use_opencl:
